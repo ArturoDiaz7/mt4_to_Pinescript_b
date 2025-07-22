@@ -1,10 +1,12 @@
 
 import React, { useState, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { GroupedTrades, Trade } from './types';
 import { processReport } from './services/tradeProcessor';
 import { generatePineScript } from './services/pineScriptGenerator';
 
 const App: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const [groupedTrades, setGroupedTrades] = useState<GroupedTrades | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [beTolerance, setBeTolerance] = useState<number>(0);
@@ -77,10 +79,10 @@ const App: React.FC = () => {
 
   const TradeItem: React.FC<{ trade: Trade, type: 'winner' | 'loser' | 'breakeven' }> = ({ trade, type }) => (
     <div className="trade-item text-sm p-2 border-b border-gray-700 grid grid-cols-5 gap-2 items-center">
-      <span className="col-span-1">T: {trade.ticket}</span>
-      <span className="col-span-2">O: {trade.openTimeRaw} @ {trade.openPrice}</span>
+      <span className="col-span-1">{t('tradeItem.ticket', { ticket: trade.ticket })}</span>
+      <span className="col-span-2">{t('tradeItem.openTime', { openTime: trade.openTimeRaw, openPrice: trade.openPrice })}</span>
        {type === 'winner' && (
-         <span className="col-span-2">C: {trade.closeTimeRaw} @ {trade.closePrice}</span>
+         <span className="col-span-2">{t('tradeItem.closeTime', { closeTime: trade.closeTimeRaw, closePrice: trade.closePrice })}</span>
        )}
        {type !== 'winner' && <span className="col-span-2"></span>}
        <span className={`col-span-1 text-right font-mono ${trade.profit > 0 ? 'text-green-400' : trade.profit < 0 ? 'text-red-400' : 'text-blue-400'}`}>
@@ -93,9 +95,20 @@ const App: React.FC = () => {
     <div id="mt4-to-tv-converter" className="min-h-screen bg-gray-900 text-gray-300 p-4 sm:p-6 lg:p-8">
       <div className="container mx-auto max-w-4xl">
         <header className="text-center mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-white">Convertidor de Reportes MT4 a Pine Script</h1>
-          <p className="text-gray-400 mt-2">Carga tu reporte HTM, clasifica tus trades y visualízalos en TradingView.</p>
+          <h1 className="text-3xl sm:text-4xl font-bold text-white">{t('appTitle')}</h1>
+          <p className="text-gray-400 mt-2">{t('appDescription')}</p>
         </header>
+
+        <div className="flex justify-end mb-4">
+          <select
+            onChange={(e) => i18n.changeLanguage(e.target.value)}
+            value={i18n.language}
+            className="bg-gray-700 border border-gray-600 text-white rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          >
+            <option value="en">English</option>
+            <option value="es">Español</option>
+          </select>
+        </div>
 
         <div className="card bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
           <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -108,11 +121,11 @@ const App: React.FC = () => {
               accept=".htm,.html"
             />
             <button id="loadReportBtn" onClick={handleLoadReportClick} className="btn-primary w-full sm:w-auto">
-              Cargar Reporte
+              {t('loadReport')}
             </button>
-            <span id="fileNameDisplay" className="text-gray-400 italic flex-grow text-center sm:text-left">{fileName || "Ningún archivo seleccionado"}</span>
+            <span id="fileNameDisplay" className="text-gray-400 italic flex-grow text-center sm:text-left">{fileName || t('noFileSelected')}</span>
             <div className="flex items-center gap-2">
-              <label htmlFor="beTolerance" className="font-semibold text-white">Tolerancia BE:</label>
+              <label htmlFor="beTolerance" className="font-semibold text-white">{t('beTolerance')}</label>
               <input
                 type="number"
                 id="beTolerance"
@@ -128,13 +141,13 @@ const App: React.FC = () => {
         {isLoading && (
             <div className="flex justify-center items-center my-8">
                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-                 <span className="ml-4 text-white text-lg">Procesando...</span>
+                 <span className="ml-4 text-white text-lg">{t('processing')}</span>
             </div>
         )}
 
         {error && (
           <div id="errorMessage" className="bg-red-900 border border-red-700 text-red-300 px-4 py-3 rounded-md relative" role="alert">
-            <strong className="font-bold">Error: </strong>
+            <strong className="font-bold">{t('error')} </strong>
             <span className="block sm:inline">{error}</span>
           </div>
         )}
@@ -155,29 +168,29 @@ const App: React.FC = () => {
                     <div className="p-4">
                          {/* Winners */}
                         <div className="mb-4">
-                             <h3 className="text-lg font-semibold text-green-400">Ganadores ({groupedTrades[item].winners.length})</h3>
+                             <h3 className="text-lg font-semibold text-green-400">{t('results.winners', { count: groupedTrades[item].winners.length })}</h3>
                              {groupedTrades[item].winners.length > 0 ? (
                                 groupedTrades[item].winners.map(trade => <TradeItem key={trade.ticket} trade={trade} type="winner" />)
-                             ) : <p className="text-gray-500 italic p-2">Sin trades ganadores.</p>}
+                             ) : <p className="text-gray-500 italic p-2">{t('results.noWinners')}</p>}
                         </div>
                         {/* Break Even */}
                         <div className="mb-4">
-                            <h3 className="text-lg font-semibold text-blue-400">Break Even ({groupedTrades[item].breakeven.length})</h3>
+                            <h3 className="text-lg font-semibold text-blue-400">{t('results.breakeven', { count: groupedTrades[item].breakeven.length })}</h3>
                              {groupedTrades[item].breakeven.length > 0 ? (
                                 groupedTrades[item].breakeven.map(trade => <TradeItem key={trade.ticket} trade={trade} type="breakeven" />)
-                             ) : <p className="text-gray-500 italic p-2">Sin trades break even.</p>}
+                             ) : <p className="text-gray-500 italic p-2">{t('results.noBreakeven')}</p>}
                         </div>
                         {/* Losers */}
                         <div>
-                            <h3 className="text-lg font-semibold text-red-400">Perdedores ({groupedTrades[item].losers.length})</h3>
+                            <h3 className="text-lg font-semibold text-red-400">{t('results.losers', { count: groupedTrades[item].losers.length })}</h3>
                              {groupedTrades[item].losers.length > 0 ? (
                                 groupedTrades[item].losers.map(trade => <TradeItem key={trade.ticket} trade={trade} type="loser" />)
-                             ) : <p className="text-gray-500 italic p-2">Sin trades perdedores.</p>}
+                             ) : <p className="text-gray-500 italic p-2">{t('results.noLosers')}</p>}
                         </div>
 
                          <div className="mt-6 text-center">
                             <button onClick={() => copyPineScript(item)} className="btn-secondary">
-                                {copiedItem === item ? 'Copiado!' : `Copiar Pine Script para ${item.toUpperCase()}`}
+                                {copiedItem === item ? t('results.copied') : t('results.copyPineScript', { symbol: item.toUpperCase() })}
                             </button>
                         </div>
                     </div>
