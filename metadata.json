@@ -1,0 +1,5 @@
+{
+  "name": "MT4 Report to Pine Script Converter",
+  "description": "An application to upload a MetaTrader 4 HTM report, analyze closed transactions, and generate a Pine Script v5 to visualize trades on a TradingView chart.",
+  "requestFramePermissions": []
+}
